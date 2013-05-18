@@ -1,6 +1,5 @@
 #include "Interpreter.h"
 #include <cstdio>
-#include <iostream>
 
 namespace bf {
 
@@ -38,13 +37,19 @@ void Interpreter::interpret(const std::vector<Command*>& commands) {
                 break;
             } case Command::START_WHILE: {
                 if(!_memPos(pointerPos)) {
-                    programPos = ((StartWhile*)command)->matching;
+                    programPos = ((StartWhile*)command)->matching->position;
                 }
                 break;
-            } case Command::END_WHILE:{
+            } case Command::END_WHILE: {
                 if(_memPos(pointerPos)) {
-                    programPos = ((EndWhile*)command)->matching;
+                    programPos = ((EndWhile*)command)->matching->position;
                 }
+                break;
+            } case Command::MULTI_ADDS: {
+                for (auto it : ((MultiAdds*)command)->adds) {
+                    _memPos(pointerPos + it.first) += it.second;
+                }
+                pointerPos += ((MultiAdds*)command)->pointerShift;
                 break;
             }
             default:

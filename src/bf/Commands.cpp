@@ -11,6 +11,7 @@ Minus::Minus() : Command(MINUS) {}
 Plus::Plus() : Command(PLUS) {}
 StartWhile::StartWhile() : Command(START_WHILE) {}
 EndWhile::EndWhile() : Command(END_WHILE) {}
+MultiAdds::MultiAdds() : Command(MULTI_ADDS) {}
 
 } //namespace bf
 

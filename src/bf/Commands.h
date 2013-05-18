@@ -1,7 +1,7 @@
 #ifndef BF_COMMANDS_H
 #define BF_COMMANDS_H
 
-#include <vector>
+#include <unordered_map>
 
 namespace bf {
 
@@ -14,7 +14,8 @@ struct Command {
         MINUS,
         PLUS,
         START_WHILE,
-        END_WHILE
+        END_WHILE,
+        MULTI_ADDS
     };
 
     Command(COMMAND_TYPE t);
@@ -46,14 +47,23 @@ struct Plus : public Command {
     Plus();
 };
 
+struct EndWhile;
 struct StartWhile : public Command {
     StartWhile();
-    int matching;
+    int position;
+    EndWhile* matching;
 };
 
 struct EndWhile : public Command {
     EndWhile();
-    int matching;
+    int position;
+    StartWhile* matching;
+};
+
+struct MultiAdds : public Command {
+    MultiAdds();
+    int pointerShift;
+    std::unordered_map<int, char> adds;
 };
 
 } //namespace bf
