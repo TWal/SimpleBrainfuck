@@ -1,46 +1,48 @@
-#include "BfParser.h"
-#include "BfCommands.h"
+#include "Parser.h"
+#include "Commands.h"
 #include <stack>
 
-BfParser::BfParser() {
+namespace bf {
+
+Parser::Parser() {
 }
 
-BfParser::~BfParser() {
+Parser::~Parser() {
 }
 
-void BfParser::parse(const std::string& code, std::vector<BfCommand*>& commands) {
+void Parser::parse(const std::string& code, std::vector<Command*>& commands) {
     commands.clear();
     std::stack<int> bracketsPos;
 
     for(auto it = code.cbegin(); it != code.cend(); ++it) {
         switch(*it) {
             case '.': {
-                commands.push_back(new BfOutput());
+                commands.push_back(new Output());
                 break;
             } case ',': {
-                commands.push_back(new BfInput());
+                commands.push_back(new Input());
                 break;
             } case '<': {
-                commands.push_back(new BfPointerLeft());
+                commands.push_back(new PointerLeft());
                 break;
             } case '>': {
-                commands.push_back(new BfPointerRight());
+                commands.push_back(new PointerRight());
                 break;
             } case '-': {
-                commands.push_back(new BfMinus());
+                commands.push_back(new Minus());
                 break;
             } case '+': {
-                commands.push_back(new BfPlus());
+                commands.push_back(new Plus());
                 break;
             } case '[': {
                 bracketsPos.push(commands.size());
-                commands.push_back(new BfStartWhile());
+                commands.push_back(new StartWhile());
                 break;
             } case ']': {
                 int matchingPos = bracketsPos.top();
-                ((BfStartWhile*)commands[matchingPos])->matching = commands.size();
-                commands.push_back(new BfEndWhile());
-                ((BfEndWhile*)commands.back())->matching = matchingPos;
+                ((StartWhile*)commands[matchingPos])->matching = commands.size();
+                commands.push_back(new EndWhile());
+                ((EndWhile*)commands.back())->matching = matchingPos;
                 bracketsPos.pop();
                 break;
             }
@@ -49,4 +51,6 @@ void BfParser::parse(const std::string& code, std::vector<BfCommand*>& commands)
         }
     }
 }
+
+} //namespace bf
 

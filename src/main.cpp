@@ -1,8 +1,8 @@
 #include <iostream>
 #include <fstream>
 
-#include "BfParser.h"
-#include "BfInterpreter.h"
+#include "bf/Parser.h"
+#include "bf/Interpreter.h"
 
 int main(int argc, char** argv) {
     if(argc <= 1) {
@@ -25,10 +25,10 @@ int main(int argc, char** argv) {
 
     file.close();
 
-    BfParser parser;
-    BfInterpreter interpreter;
+    bf::Parser parser;
+    bf::Interpreter interpreter;
 
-    std::vector<BfCommand*> cmds;
+    std::vector<bf::Command*> cmds;
     parser.parse(bfprog, cmds);
     interpreter.interpret(cmds);
 

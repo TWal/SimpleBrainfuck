@@ -1,47 +1,49 @@
-#include "BfInterpreter.h"
+#include "Interpreter.h"
 #include <cstdio>
 #include <iostream>
 
-BfInterpreter::BfInterpreter() {
+namespace bf {
+
+Interpreter::Interpreter() {
 }
 
-BfInterpreter::~BfInterpreter() {
+Interpreter::~Interpreter() {
 }
 
-void BfInterpreter::interpret(const std::vector<BfCommand*>& commands) {
+void Interpreter::interpret(const std::vector<Command*>& commands) {
     int pointerPos = 0;
     unsigned int programPos = 0;
 
     while(programPos < commands.size()) {
-        BfCommand* command = commands[programPos];
+        Command* command = commands[programPos];
         switch(command->type) {
-            case BfCommand::BF_OUTPUT: {
+            case Command::OUTPUT: {
                 putchar(_memPos(pointerPos));
                 break;
-            } case BfCommand::BF_INPUT: {
+            } case Command::INPUT: {
                 int c = getchar();
                 _memPos(pointerPos) = (c == EOF ? 0 : c);
                 break;
-            } case BfCommand::BF_POINTER_LEFT: {
+            } case Command::POINTER_LEFT: {
                 --pointerPos;
                 break;
-            } case BfCommand::BF_POINTER_RIGHT: {
+            } case Command::POINTER_RIGHT: {
                 ++pointerPos;
                 break;
-            } case BfCommand::BF_MINUS: {
+            } case Command::MINUS: {
                 --_memPos(pointerPos);
                 break;
-            } case BfCommand::BF_PLUS: {
+            } case Command::PLUS: {
                 ++_memPos(pointerPos);
                 break;
-            } case BfCommand::BF_START_WHILE: {
+            } case Command::START_WHILE: {
                 if(!_memPos(pointerPos)) {
-                    programPos = ((BfStartWhile*)command)->matching;
+                    programPos = ((StartWhile*)command)->matching;
                 }
                 break;
-            } case BfCommand::BF_END_WHILE:{
+            } case Command::END_WHILE:{
                 if(_memPos(pointerPos)) {
-                    programPos = ((BfEndWhile*)command)->matching;
+                    programPos = ((EndWhile*)command)->matching;
                 }
                 break;
             }
@@ -52,7 +54,7 @@ void BfInterpreter::interpret(const std::vector<BfCommand*>& commands) {
     }
 }
 
-char& BfInterpreter::_memPos(int pos) {
+char& Interpreter::_memPos(int pos) {
     if(pos >= 0) {
         if((unsigned int)pos >= _posMem.size()) {
             _posMem.resize(pos+1, 0);
@@ -66,4 +68,6 @@ char& BfInterpreter::_memPos(int pos) {
         return _negMem[pos];
     }
 }
+
+} //namespace bf
 
