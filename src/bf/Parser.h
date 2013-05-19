@@ -16,10 +16,13 @@ class Parser {
         enum OPTIMIZATIONS {
             NO_OPTIMIZATION,
             MULTI_ADDS,
-            FULL_OPTIMIZATION = MULTI_ADDS
+            UNROLL_LOOPS,
+            FULL_OPTIMIZATION = MULTI_ADDS | UNROLL_LOOPS
         };
     private:
+        unsigned int _addWhilePos(std::list<Command*>& commands) const;
         void _useMultiAdds(std::list<Command*>& commands) const;
+        void _unrollLoops(std::list<Command*>& commands) const;
 };
 
 } //namespace bf

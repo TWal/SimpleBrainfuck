@@ -15,7 +15,8 @@ struct Command {
         PLUS,
         START_WHILE,
         END_WHILE,
-        MULTI_ADDS
+        MULTI_ADDS,
+        MULTIPLIES
     };
 
     Command(COMMAND_TYPE t);
@@ -64,6 +65,11 @@ struct MultiAdds : public Command {
     MultiAdds();
     int pointerShift;
     std::unordered_map<int, char> adds;
+};
+
+struct Multiplies : public Command {
+    Multiplies();
+    std::unordered_map<int, char> muls;
 };
 
 } //namespace bf

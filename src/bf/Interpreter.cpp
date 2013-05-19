@@ -51,6 +51,13 @@ void Interpreter::interpret(const std::vector<Command*>& commands) {
                 }
                 pointerPos += ((MultiAdds*)command)->pointerShift;
                 break;
+            } case Command::MULTIPLIES: {
+                char value = _memPos(pointerPos);
+                for (auto it : ((Multiplies*)command)->muls) {
+                    _memPos(pointerPos + it.first) += it.second * value;
+                }
+                _memPos(pointerPos) = 0;
+                break;
             }
             default:
                 break;
