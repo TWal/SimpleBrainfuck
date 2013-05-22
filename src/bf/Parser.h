@@ -3,7 +3,6 @@
 
 #include <string>
 #include <vector>
-#include <list>
 #include "Commands.h"
 
 namespace bf {
@@ -12,17 +11,13 @@ class Parser {
     public:
         Parser();
         ~Parser();
-        void parse(const std::string& code, std::vector<Command*>& commands, char optimizations) const;
-        enum OPTIMIZATIONS {
-            NO_OPTIMIZATION,
-            MULTI_ADDS,
-            UNROLL_LOOPS,
-            FULL_OPTIMIZATION = MULTI_ADDS | UNROLL_LOOPS
-        };
+        void parse(const std::string& code, std::vector<Command*>& commands) const;
     private:
-        unsigned int _addWhilePos(std::list<Command*>& commands) const;
-        void _useMultiAdds(std::list<Command*>& commands) const;
-        void _unrollLoops(std::list<Command*>& commands) const;
+        void _clean(std::vector<Command*>& commands) const;
+        void _ultra_clean(std::vector<Command*>& commands) const;
+        void _addWhilePos(std::vector<Command*>& commands) const;
+        void _collapse(std::vector<Command*>& commands) const;
+        void _unrollLoops(std::vector<Command*>& commands) const;
 };
 
 } //namespace bf

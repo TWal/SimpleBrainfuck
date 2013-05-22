@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
     bf::Interpreter interpreter;
 
     std::vector<bf::Command*> cmds;
-    parser.parse(bfprog, cmds, bf::Parser::FULL_OPTIMIZATION);
+    parser.parse(bfprog, cmds);
     interpreter.interpret(cmds);
 
     return 0;

@@ -7,6 +7,7 @@ namespace bf {
 
 struct Command {
     enum COMMAND_TYPE {
+        NO_OPERATION,
         OUTPUT,
         INPUT,
         POINTER_LEFT,
@@ -15,13 +16,17 @@ struct Command {
         PLUS,
         START_WHILE,
         END_WHILE,
-        MULTI_ADDS,
+        COLLAPSED,
         MULTIPLIES
     };
 
     Command(COMMAND_TYPE t);
 
     COMMAND_TYPE type;
+};
+
+struct NoOperation : public Command {
+    NoOperation();
 };
 
 struct Output : public Command {
@@ -61,15 +66,15 @@ struct EndWhile : public Command {
     StartWhile* matching;
 };
 
-struct MultiAdds : public Command {
-    MultiAdds();
+struct Collapsed : public Command {
+    Collapsed();
     int pointerShift;
-    std::unordered_map<int, char> adds;
+    std::unordered_map<int, int> adds;
 };
 
 struct Multiplies : public Command {
     Multiplies();
-    std::unordered_map<int, char> muls;
+    std::unordered_map<int, int> muls;
 };
 
 } //namespace bf

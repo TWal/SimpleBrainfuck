@@ -10,34 +10,35 @@ Parser::Parser() {
 Parser::~Parser() {
 }
 
-void Parser::parse(const std::string& code, std::vector<Command*>& commands, char optimizations) const {
-    std::list<Command*> commandList;
+void Parser::parse(const std::string& code, std::vector<Command*>& commands) const {
+    commands.clear();
+    commands.reserve(code.size());
     std::stack<StartWhile*> brackets;
 
     for(char c : code) {
         switch(c) {
             case '.': {
-                commandList.push_back(new Output());
+                commands.push_back(new Output());
                 break;
             } case ',': {
-                commandList.push_back(new Input());
+                commands.push_back(new Input());
                 break;
             } case '<': {
-                commandList.push_back(new PointerLeft());
+                commands.push_back(new PointerLeft());
                 break;
             } case '>': {
-                commandList.push_back(new PointerRight());
+                commands.push_back(new PointerRight());
                 break;
             } case '-': {
-                commandList.push_back(new Minus());
+                commands.push_back(new Minus());
                 break;
             } case '+': {
-                commandList.push_back(new Plus());
+                commands.push_back(new Plus());
                 break;
             } case '[': {
                 StartWhile* startWhile = new StartWhile();
                 brackets.push(startWhile);
-                commandList.push_back(startWhile);
+                commands.push_back(startWhile);
                 break;
             } case ']': {
                 StartWhile* matching = brackets.top();
@@ -45,7 +46,7 @@ void Parser::parse(const std::string& code, std::vector<Command*>& commands, cha
                 EndWhile* endWhile = new EndWhile();
                 ((StartWhile*)matching)->matching = endWhile;
                 endWhile->matching = matching;
-                commandList.push_back(endWhile);
+                commands.push_back(endWhile);
                 break;
             }
             default:
@@ -53,46 +54,76 @@ void Parser::parse(const std::string& code, std::vector<Command*>& commands, cha
         }
     }
 
-    if(optimizations & MULTI_ADDS || optimizations & UNROLL_LOOPS) {
-        _useMultiAdds(commandList);
-    }
+    _collapse(commands);
+    _clean(commands);
 
-    if(optimizations & UNROLL_LOOPS) {
-        _unrollLoops(commandList);
-    }
+    _unrollLoops(commands);
+    _clean(commands);
 
-    commands.clear();
-    commands.reserve(_addWhilePos(commandList)); //Hack: _addWhilePos return the size of the list (because list.size() is O(n), we save some time)
-    commands.assign(commandList.begin(), commandList.end());
+    _addWhilePos(commands);
+    _ultra_clean(commands);
 }
 
-unsigned int Parser::_addWhilePos(std::list<Command*>& commands) const {
-    int size = 0;
-    for(Command* cmd : commands) {
+void Parser::_clean(std::vector<Command*>& commands) const {
+    std::vector<Command*> copy = commands;
+    commands.clear();
+    commands.reserve(copy.size());
+    for(Command* cmd : copy) {
+        if(cmd->type == Command::NO_OPERATION) {
+            delete cmd;
+        } else {
+            commands.push_back(cmd);
+        }
+    }
+}
+
+void Parser::_ultra_clean(std::vector<Command*>& commands) const {
+    for(Command* cmd: commands) {
         switch(cmd->type) {
-            case Command::START_WHILE:
-                ((StartWhile*)cmd)->position = size;
+            case Command::COLLAPSED:
+                for(auto& it : ((Collapsed*)cmd)->adds) {
+                    if(it.second == 0) {
+                        ((Collapsed*)cmd)->adds.erase(it.first);
+                    }
+                }
                 break;
-            case Command::END_WHILE:
-                ((EndWhile*)cmd)->position = size;
+            case Command::MULTIPLIES:
+                for(auto& it : ((Multiplies*)cmd)->muls) {
+                    if(it.second == 0) {
+                        ((Multiplies*)cmd)->muls.erase(it.first);
+                    }
+                }
                 break;
             default:
                 break;
         }
-        ++size;
     }
-    return size;
 }
 
-void Parser::_useMultiAdds(std::list<Command*>& commands) const {
-    std::unordered_map<int, char> currentAdds;
+void Parser::_addWhilePos(std::vector<Command*>& commands) const {
+    for(unsigned int i = 0; i < commands.size(); ++i) {
+        switch(commands[i]->type) {
+            case Command::START_WHILE:
+                ((StartWhile*)commands[i])->position = i;
+                break;
+            case Command::END_WHILE:
+                ((EndWhile*)commands[i])->position = i;
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+void Parser::_collapse(std::vector<Command*>& commands) const {
+    std::unordered_map<int, int> currentAdds;
     int currentRelativePos = 0;
 
-    auto it = commands.begin();
-    while(it != commands.end()) {
-        bool insertMultiAdd = false;
+    unsigned int i = 0;
+    while(i < commands.size()) {
+        bool insertCollapse = false;
         bool deleteCurrentInstruction = false;
-        switch((*it)->type) {
+        switch(commands[i]->type) {
             case Command::POINTER_LEFT:
                 --currentRelativePos;
                 deleteCurrentInstruction = true;
@@ -113,47 +144,39 @@ void Parser::_useMultiAdds(std::list<Command*>& commands) const {
             case Command::END_WHILE:
             case Command::OUTPUT:
             case Command::INPUT:
-                insertMultiAdd = true;
+                insertCollapse = true;
                 break;
             default:
                 break;
         }
 
         if(deleteCurrentInstruction) {
-            delete *it;
-            it = commands.erase(it);
+            delete commands[i];
+            commands[i] = new NoOperation();
         }
 
-        if(insertMultiAdd) {
-            MultiAdds* cmd = new MultiAdds();
+        if(insertCollapse && i != 0 && commands[i-1]->type == Command::NO_OPERATION) {
+            delete commands[i-1];
+            Collapsed* cmd = new Collapsed();
             cmd->adds = currentAdds;
             cmd->pointerShift = currentRelativePos;
-            commands.insert(it, cmd);
+            commands[i-1] = cmd;
             currentAdds.clear();
             currentRelativePos = 0;
         }
-
-        if(!deleteCurrentInstruction) {
-            ++it;
-        }
+        ++i;
     }
 }
 
-void Parser::_unrollLoops(std::list<Command*>& commands) const {
-    auto it = commands.begin();
-    while(it != commands.end()) {
+void Parser::_unrollLoops(std::vector<Command*>& commands) const {
+    unsigned int i = 0;
+    while(i < commands.size()) {
         bool unroll = false;
-        switch((*it)->type) {
+        switch(commands[i]->type) {
             case Command::START_WHILE: {
-                Command* nextCmd = *(++it);
-                if(nextCmd->type == Command::MULTI_ADDS && ((MultiAdds*)nextCmd)->pointerShift == 0 && ((MultiAdds*)nextCmd)->adds[0] == -1) {
-                    nextCmd = *(++it);
-                    if(nextCmd->type == Command::END_WHILE) {
-                        unroll = true;
-                    }
-                    --it;
+                if(commands[i+1]->type == Command::COLLAPSED && ((Collapsed*)commands[i+1])->pointerShift == 0 && ((Collapsed*)commands[i+1])->adds[0] == -1 && commands[i+2]->type == Command::END_WHILE) {
+                    unroll = true;
                 }
-                --it;
                 break;
             }
             default:
@@ -161,18 +184,19 @@ void Parser::_unrollLoops(std::list<Command*>& commands) const {
         }
 
         if(unroll) {
-            delete *it; // StartWhile
-            it = commands.erase(it);
+            delete commands[i]; // StartWhile
+            commands[i] = new NoOperation();
+            ++i;
             Multiplies* cmd = new Multiplies();
-            cmd->muls = ((MultiAdds*)*it)->adds;
+            cmd->muls = ((Collapsed*)commands[i])->adds;
             cmd->muls.erase(0);
-            delete *it; // MultiAdds
-            it = commands.erase(it);
-            delete *it; // EndWhile
-            it = commands.erase(it);
-            commands.insert(it, cmd);
+            delete commands[i]; // Collapsed
+            commands[i] = new NoOperation();
+            ++i;
+            delete commands[i]; // EndWhile
+            commands[i] = cmd;
         }
-        ++it;
+        ++i;
     }
 }
 
