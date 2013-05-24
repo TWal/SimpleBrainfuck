@@ -101,18 +101,18 @@ void Interpreter::interpret(const std::vector<Command*>& commands) {
                 pointerPos += cmd.shift;
                 break;
             } case OptimizedCommand::ADDITIONS: {
-                for(short i = 0; i < cmd.data; ++i) {
-                    ++programPos;
+                while(optiCommands[++programPos].type == OptimizedCommand::DATA) {
                     _memPos(pointerPos + optiCommands[programPos].shift) += optiCommands[programPos].data;
                 }
+                --programPos;
                 pointerPos += cmd.shift;
                 break;
             } case OptimizedCommand::MULTIPLIES: {
                 char initialVal = _memPos(pointerPos);
-                for(short i = 0; i < cmd.data; ++i) {
-                    ++programPos;
+                while(optiCommands[++programPos].type == OptimizedCommand::DATA) {
                     _memPos(pointerPos + optiCommands[programPos].shift) += initialVal * optiCommands[programPos].data;
                 }
+                --programPos;
                 _memPos(pointerPos) = 0;
                 pointerPos += cmd.shift;
                 break;
