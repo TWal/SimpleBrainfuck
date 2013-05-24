@@ -14,6 +14,7 @@ StartWhile::StartWhile() : Command(START_WHILE) {}
 EndWhile::EndWhile() : Command(END_WHILE) {}
 Collapsed::Collapsed() : Command(COLLAPSED) {}
 Multiplies::Multiplies() : Command(MULTIPLIES) {}
+WhileShift::WhileShift() : Command(WHILE_SHIFT) {}
 
 } //namespace bf
 

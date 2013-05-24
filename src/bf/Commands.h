@@ -17,7 +17,8 @@ struct Command {
         START_WHILE,
         END_WHILE,
         COLLAPSED,
-        MULTIPLIES
+        MULTIPLIES,
+        WHILE_SHIFT
     };
 
     Command(COMMAND_TYPE t);
@@ -75,6 +76,11 @@ struct Collapsed : public Command {
 struct Multiplies : public Command {
     Multiplies();
     std::unordered_map<int, int> muls;
+};
+
+struct WhileShift : public Command {
+    WhileShift();
+    int nb;
 };
 
 } //namespace bf

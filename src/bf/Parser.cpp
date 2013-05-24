@@ -172,11 +172,14 @@ void Parser::_collapse(std::vector<Command*>& commands) const {
 void Parser::_unrollLoops(std::vector<Command*>& commands) const {
     unsigned int i = 0;
     while(i < commands.size()) {
-        bool unroll = false;
+        bool multiplies = false;
+        bool whileShift = false;
         switch(commands[i]->type) {
             case Command::START_WHILE: {
                 if(commands[i+1]->type == Command::COLLAPSED && commands[i+1]->shift == 0 && ((Collapsed*)commands[i+1])->adds[0] == -1 && commands[i+2]->type == Command::END_WHILE) {
-                    unroll = true;
+                    multiplies = true;
+                } else if(commands[i]->shift != 0 && commands[i+1]->type == Command::END_WHILE) {
+                    whileShift = true;
                 }
                 break;
             }
@@ -184,7 +187,7 @@ void Parser::_unrollLoops(std::vector<Command*>& commands) const {
                 break;
         }
 
-        if(unroll) {
+        if(multiplies) {
             delete commands[i]; // StartWhile
             commands[i] = new NoOperation();
             ++i;
@@ -192,6 +195,17 @@ void Parser::_unrollLoops(std::vector<Command*>& commands) const {
             cmd->muls = ((Collapsed*)commands[i])->adds;
             cmd->muls.erase(0);
             delete commands[i]; // Collapsed
+            commands[i] = new NoOperation();
+            ++i;
+            cmd->shift = commands[i]->shift;
+            delete commands[i]; // EndWhile
+            commands[i] = cmd;
+        }
+
+        if(whileShift) {
+            WhileShift* cmd = new WhileShift();
+            cmd->nb = commands[i]->shift;
+            delete commands[i]; // StartWhile
             commands[i] = new NoOperation();
             ++i;
             cmd->shift = commands[i]->shift;

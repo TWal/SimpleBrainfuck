@@ -47,6 +47,9 @@ void Interpreter::interpret(const std::vector<Command*>& commands) {
                 }
                 break;
             }
+            case Command::WHILE_SHIFT:
+                optiCommands.push_back({OptimizedCommand::WHILE_SHIFT, (short)((WhileShift*)cmd)->nb, (short)cmd->shift});
+                break;
             default:
                 break;
         }
