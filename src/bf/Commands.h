@@ -23,6 +23,7 @@ struct Command {
     Command(COMMAND_TYPE t);
 
     COMMAND_TYPE type;
+    int shift;
 };
 
 struct NoOperation : public Command {
@@ -68,7 +69,6 @@ struct EndWhile : public Command {
 
 struct Collapsed : public Command {
     Collapsed();
-    int pointerShift;
     std::unordered_map<int, int> adds;
 };
 
