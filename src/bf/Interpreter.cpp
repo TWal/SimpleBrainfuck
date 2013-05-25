@@ -4,7 +4,9 @@
 
 namespace bf {
 
-Interpreter::Interpreter() {
+Interpreter::Interpreter(int positiveMem, int negativeMem) {
+    _mem = new char[positiveMem + negativeMem];
+    _mem += negativeMem;
 }
 
 Interpreter::~Interpreter() {
@@ -66,16 +68,16 @@ void Interpreter::interpret(const std::vector<Command*>& commands) {
         OptimizedCommand& cmd = optiCommands[programPos];
         switch(cmd.type) {
             case OptimizedCommand::OUTPUT: {
-                putchar(_memPos(pointerPos));
+                putchar(_mem[pointerPos]);
                 pointerPos += cmd.shift;
                 break;
            } case OptimizedCommand::INPUT: {
                 int c = getchar();
-                _memPos(pointerPos) = (c == EOF ? 0 : c);
+                _mem[pointerPos] = (c == EOF ? 0 : c);
                 pointerPos += cmd.shift;
                 break;
             } case OptimizedCommand::START_WHILE: {
-                if(!_memPos(pointerPos)) {
+                if(!_mem[pointerPos]) {
                     programPos = cmd.data;
                     pointerPos += optiCommands[programPos].shift;
                 } else {
@@ -83,7 +85,7 @@ void Interpreter::interpret(const std::vector<Command*>& commands) {
                 }
                 break;
             } case OptimizedCommand::END_WHILE: {
-                if(_memPos(pointerPos)) {
+                if(_mem[pointerPos]) {
                     programPos = cmd.data;
                     pointerPos += optiCommands[programPos].shift;
                 } else {
@@ -91,50 +93,35 @@ void Interpreter::interpret(const std::vector<Command*>& commands) {
                 }
                 break;
             } case OptimizedCommand::ZERO: {
-                _memPos(pointerPos) = 0;
+                _mem[pointerPos] = 0;
                 pointerPos += cmd.shift;
                 break;
             } case OptimizedCommand::WHILE_SHIFT: {
-                while(_memPos(pointerPos) != 0) {
+                while(_mem[pointerPos] != 0) {
                     pointerPos += cmd.data;
                 }
                 pointerPos += cmd.shift;
                 break;
             } case OptimizedCommand::ADDITIONS: {
                 while(optiCommands[++programPos].type == OptimizedCommand::DATA) {
-                    _memPos(pointerPos + optiCommands[programPos].shift) += optiCommands[programPos].data;
+                    _mem[pointerPos + optiCommands[programPos].shift] += optiCommands[programPos].data;
                 }
                 --programPos;
                 pointerPos += cmd.shift;
                 break;
             } case OptimizedCommand::MULTIPLIES: {
-                char initialVal = _memPos(pointerPos);
+                char& initialVal = _mem[pointerPos];
                 while(optiCommands[++programPos].type == OptimizedCommand::DATA) {
-                    _memPos(pointerPos + optiCommands[programPos].shift) += initialVal * optiCommands[programPos].data;
+                    _mem[pointerPos + optiCommands[programPos].shift] += initialVal * optiCommands[programPos].data;
                 }
                 --programPos;
-                _memPos(pointerPos) = 0;
+                initialVal = 0;
                 pointerPos += cmd.shift;
                 break;
             } default:
                 break;
         }
         ++programPos;
-    }
-}
-
-char& Interpreter::_memPos(int pos) {
-    if(pos >= 0) {
-        if((unsigned int)pos >= _posMem.size()) {
-            _posMem.resize(pos+1, 0);
-        }
-        return _posMem[pos];
-    } else {
-        pos = -1 - pos;
-        if((unsigned int)pos >= _negMem.size()) {
-            _negMem.resize(pos+1, 0);
-        }
-        return _negMem[pos];
     }
 }
 

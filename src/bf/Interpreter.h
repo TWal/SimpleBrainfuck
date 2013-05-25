@@ -8,7 +8,7 @@ namespace bf {
 
 class Interpreter {
     public:
-        Interpreter();
+        Interpreter(int positiveMem = 30000, int negativeMem = 0);
         ~Interpreter();
         void interpret(const std::vector<Command*>& commands);
         struct OptimizedCommand {
@@ -29,9 +29,7 @@ class Interpreter {
         };
 
     private:
-        char& _memPos(int pos);
-        std::vector<char> _negMem;
-        std::vector<char> _posMem;
+        char* _mem;
 };
 
 } //namespace bf
