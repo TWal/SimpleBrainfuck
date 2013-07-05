@@ -16,9 +16,9 @@ class Compiler {
     private:
         void _readFile(const std::string& file, std::string& output);
         void _trim(std::string& str);
-        std::vector<std::vector<std::string>> _variables;
+        std::unordered_map<std::string, std::vector<std::string>> _variables;
         std::unordered_map<std::string, BasicMacro*> _macros;
-        unsigned int _currentVarWorld;
+        std::string _currentVarWorld;
         unsigned int _currentVarPos;
 };
 

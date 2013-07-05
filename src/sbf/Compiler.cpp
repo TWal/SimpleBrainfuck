@@ -25,7 +25,7 @@ void Compiler::compileFromString(const std::string& str, std::string& output) {
                 continue;
             }
 
-            std::size_t openingPar = str.find("(", i);
+            size_t openingPar = str.find("(", i);
             if(openingPar == std::string::npos) {
                 std::cerr << "No opening parenthesis" << std::endl;
                 return;
@@ -67,55 +67,83 @@ void Compiler::compileFromString(const std::string& str, std::string& output) {
                     args.erase(args.begin());
                     _macros[firstArg] = new BasicMacro(args, lastArg);
                 } else if(funcName == "variables") {
-                    _variables.push_back(args);
+                    std::string worldName = args.front();
+                    args.erase(args.begin());
+                    _variables[worldName] = args;
                 }
             } else {
-                if(funcName == "at") {
-                    bool varNameFound = false;
-                    for(unsigned int i = 0; i < _variables.size() && !varNameFound; ++i) {
-                        for(unsigned int j = 0; j < _variables[i].size() && !varNameFound; ++j) {
-                            if(_variables[i][j] == args[0]) {
-                                _currentVarWorld = i;
-                                _currentVarPos = j;
-                                varNameFound = true;
-                            }
-                        }
-                    }
-                    if(!varNameFound) {
-                        std::cerr << "Variable name not found" << std::endl;
-                    }
-                } else if (funcName == "to") {
-                    bool varNameFound = false;
-                    for(unsigned int i = 0; i < _variables.size() && !varNameFound; ++i) {
-                        for(unsigned int j = 0; j < _variables[i].size() && !varNameFound; ++j) {
-                            if(_variables[i][j] == args[0]) {
-                                if(i != _currentVarWorld) {
-                                    std::cerr << "Going to a different variable world" << std::endl;
-                                }
-                                if(_currentVarPos < j) {
-                                    for(unsigned int k = 0; k < j-_currentVarPos; ++k) {
-                                        macroResult.push_back('>');
-                                    }
-                                } else {
-                                    for(unsigned int k = 0; k < _currentVarPos-j; ++k) {
-                                        macroResult.push_back('<');
-                                    }
-                                }
-                                _currentVarPos = j;
-                                varNameFound = true;
-                            }
-                        }
-                    }
-                    if(!varNameFound) {
-                        std::cerr << "Variable name not found" << std::endl;
-                    }
-                } else {
-                    _macros[funcName]->compute(args, macroResult);
+                if(_macros.find(funcName) == _macros.end()) {
+                    std::cerr << "Macro '" << funcName << "' not found" << std::endl;
+                    return;
                 }
+                _macros[funcName]->compute(args, macroResult);
             }
             std::string finalMacroResult;
             compileFromString(macroResult, finalMacroResult);
             output += finalMacroResult;
+        } else if(str[i] == '@') {
+            size_t nextArobas = str.find("@", i+1);
+            if(nextArobas == std::string::npos) {
+                std::cerr << "No '@' after '@'" << std::endl;
+                return;
+            }
+            size_t nextSemicolon = str.find(";", nextArobas);
+            if(nextSemicolon == std::string::npos) {
+                std::cerr << "No ';' after '@'" << std::endl;
+                return;
+            }
+            std::string worldName = str.substr(i+1, nextArobas-i-1);
+            std::string variableName = str.substr(nextArobas+1, nextSemicolon-nextArobas-1);
+            _trim(worldName);
+            _trim(variableName);
+            if(_variables.find(worldName) == _variables.end()) {
+                std::cerr << "Unknown variable world '" << worldName << "'" << std::endl;
+                return;
+            }
+            _currentVarWorld = worldName;
+            bool found = false;
+            for(unsigned int j = 0; j < _variables[_currentVarWorld].size(); ++j) {
+                if(_variables[_currentVarWorld][j] == variableName) {
+                    _currentVarPos = j;
+                    found = true;
+                    break;
+                }
+            }
+            if(!found) {
+                std::cerr << "Variable '" << variableName << "' not found in world '" << _currentVarWorld << "'" << std::endl;
+                return;
+            }
+            i = nextSemicolon;
+        } else if(str[i] == '=') {
+            size_t semicolon = str.find(";", i);
+            if(semicolon == std::string::npos) {
+                std::cerr << "No ';' after '='" << std::endl;
+                return;
+            }
+            std::string variableName = str.substr(i+1, semicolon-i-1);
+            _trim(variableName);
+            bool found = false;
+            for(unsigned int j = 0; j < _variables[_currentVarWorld].size(); ++j) {
+                if(_variables[_currentVarWorld][j] == variableName) {
+                    if(_currentVarPos < j) {
+                        for(unsigned int k = 0; k < j-_currentVarPos; ++k) {
+                            output.push_back('>');
+                        }
+                    } else {
+                        for(unsigned int k = 0; k < _currentVarPos-j; ++k) {
+                            output.push_back('<');
+                        }
+                    }
+                    _currentVarPos = j;
+                    found = true;
+                    break;
+                }
+            }
+            if(!found) {
+                std::cerr << "Variable '" << variableName << "' not found in world '" << _currentVarWorld << "'" << std::endl;
+                return;
+            }
+            i = semicolon;
         } else {
             output.push_back(str[i]);
         }
