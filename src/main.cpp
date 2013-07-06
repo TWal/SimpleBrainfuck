@@ -4,12 +4,13 @@
 #include <tuple>
 
 #include "bf/Parser.h"
+#include "bf/Resrap.h"
 #include "bf/Interpreter.h"
 
 #include "sbf/Compiler.h"
 
 int main(int argc, char** argv) {
-    std::unordered_set<std::string> programs({"compile", "run"});
+    std::unordered_set<std::string> programs({"compile", "strip", "run"});
     std::vector<std::tuple<std::string, int, char**>> args({std::make_tuple("__prepending__", 0, &argv[1])});
     for(int i = 1; i < argc; ++i) {
         if(programs.find(argv[i]) != programs.end()) {
@@ -48,6 +49,15 @@ int main(int argc, char** argv) {
             std::string result;
             c.compileFromString(str, result);
             str = result;
+        } else if(std::get<0>(arg) == "strip") {
+            bf::Parser p;
+            bf::Resrap r;
+            std::vector<bf::Command*> cmds;
+            p.parse(str, cmds);
+            r.esrap(cmds, str);
+            for(bf::Command* cmd : cmds) {
+                delete cmd;
+            }
         } else if(std::get<0>(arg) == "run") {
             bf::Parser parser;
             bf::Interpreter interpreter;
@@ -56,6 +66,9 @@ int main(int argc, char** argv) {
             parser.parse(str, cmds);
             interpreter.interpret(cmds);
             str = "";
+            for(bf::Command* cmd : cmds) {
+                delete cmd;
+            }
         }
     }
     std::cout << str << std::flush;
