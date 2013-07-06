@@ -44,8 +44,7 @@ void Compiler::compileFromString(const std::string& str, std::string& output) {
                 }
                 if((str[i] == ';' || str[i+1] == ')') && (deepness == 0 || (deepness == 1 && str[i] == ')'))) {
                     std::string arg = str.substr(lastArgStart, i-lastArgStart + (int)(str[i+1] == ')'));
-                    args.push_back("");
-                    compileFromString(arg, args.back());
+                    args.push_back(arg);
                     _trim(args.back());
                     lastArgStart = i+1;
                 }
@@ -144,6 +143,27 @@ void Compiler::compileFromString(const std::string& str, std::string& output) {
                 return;
             }
             i = semicolon;
+        } else if(str[i] == '(') {
+            size_t matchingParenthesis = str.find(")", i);
+            if(matchingParenthesis == std::string::npos) {
+                std::cerr << "No ')' after '('" << std::endl;
+                return;
+            }
+            size_t numberEnd = str.find_first_not_of("0123456789", matchingParenthesis+1);
+            if(numberEnd == matchingParenthesis+1) {
+                std::cerr << "Parenthesis must have numbers after them" << std::endl;
+                return;
+            }
+            std::string exprToMultiply = str.substr(i+1, matchingParenthesis-i-1);
+            int number = atoi(str.substr(matchingParenthesis+1, numberEnd-matchingParenthesis-1).data());
+            std::string exprMultiplied;
+            for(int j = 0; j < number; ++j) {
+                exprMultiplied += exprToMultiply;
+            }
+            std::string result;
+            compileFromString(exprMultiplied, result);
+            output += result;
+            i = numberEnd-1;
         } else {
             output.push_back(str[i]);
         }
