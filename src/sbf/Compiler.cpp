@@ -65,7 +65,7 @@ void Compiler::compileFromString(const std::string& str, std::string& output) {
                     std::string lastArg = args.back();
                     args.pop_back();
                     args.erase(args.begin());
-                    _macros[firstArg] = new BasicMacro(args, lastArg);
+                    _macros[firstArg] = BasicMacro(args, lastArg);
                 } else if(funcName == "variables") {
                     std::string worldName = args.front();
                     args.erase(args.begin());
@@ -76,7 +76,7 @@ void Compiler::compileFromString(const std::string& str, std::string& output) {
                     std::cerr << "Macro '" << funcName << "' not found" << std::endl;
                     return;
                 }
-                _macros[funcName]->compute(args, macroResult);
+                _macros[funcName].compute(args, macroResult);
             }
             std::string finalMacroResult;
             compileFromString(macroResult, finalMacroResult);

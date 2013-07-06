@@ -22,6 +22,7 @@ struct Command {
     };
 
     Command(COMMAND_TYPE t);
+    virtual ~Command();
 
     COMMAND_TYPE type;
     int shift;
@@ -29,57 +30,69 @@ struct Command {
 
 struct NoOperation : public Command {
     NoOperation();
+    virtual ~NoOperation();
 };
 
 struct Output : public Command {
     Output();
+    virtual ~Output();
 };
 
 struct Input : public Command {
     Input();
+    virtual ~Input();
 };
 
 struct PointerLeft : public Command {
     PointerLeft();
+    virtual ~PointerLeft();
 };
 
 struct PointerRight : public Command {
     PointerRight();
+    virtual ~PointerRight();
 };
 
 struct Minus : public Command {
     Minus();
+    virtual ~Minus();
 };
 
 struct Plus : public Command {
     Plus();
+    virtual ~Plus();
 };
 
 struct EndWhile;
 struct StartWhile : public Command {
     StartWhile();
+    virtual ~StartWhile();
     int position;
     EndWhile* matching;
 };
 
 struct EndWhile : public Command {
     EndWhile();
+    virtual ~EndWhile();
     int position;
     StartWhile* matching;
 };
 
 struct Collapsed : public Command {
     Collapsed();
+    virtual ~Collapsed();
     std::unordered_map<int, int> adds;
 };
 
 struct Multiplies : public Command {
     Multiplies();
+    virtual ~Multiplies();
     std::unordered_map<int, int> muls;
 };
 
 struct WhileShift : public Command {
     WhileShift();
+    virtual ~WhileShift();
     int nb;
 };
 

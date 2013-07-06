@@ -1,15 +1,18 @@
 #include "Interpreter.h"
 #include <cstdio>
 #include <stack>
+#include <cstring>
 
 namespace bf {
 
 Interpreter::Interpreter(int positiveMem, int negativeMem) {
-    _mem = new char[positiveMem + negativeMem];
-    _mem += negativeMem;
+    _memToOrigin = new char[positiveMem + negativeMem];
+    _mem = _memToOrigin + negativeMem;
+    memset(_memToOrigin, 0, positiveMem + negativeMem);
 }
 
 Interpreter::~Interpreter() {
+    delete[] _memToOrigin;
 }
 
 void Interpreter::interpret(const std::vector<Command*>& commands) {

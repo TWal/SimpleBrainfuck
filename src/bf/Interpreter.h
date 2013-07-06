@@ -30,6 +30,7 @@ class Interpreter {
 
     private:
         char* _mem;
+        char* _memToOrigin;
 };
 
 } //namespace bf
