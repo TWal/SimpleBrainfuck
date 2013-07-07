@@ -29,19 +29,21 @@
 #include <unordered_map>
 #include <vector>
 #include "BasicMacro.h"
+#include "TccMacro.h"
 
 namespace sbf {
 
 class Compiler {
     public:
         Compiler();
+        ~Compiler();
         void compileFromFile(const std::string& file, std::string& output);
         void compileFromString(const std::string& str, std::string& output);
     private:
         void _readFile(const std::string& file, std::string& output);
         void _trim(std::string& str);
         std::unordered_map<std::string, std::vector<std::string>> _variables;
-        std::unordered_map<std::string, BasicMacro> _macros;
+        std::unordered_map<std::string, Macro*> _macros;
         std::string _currentVarWorld;
         unsigned int _currentVarPos;
 };

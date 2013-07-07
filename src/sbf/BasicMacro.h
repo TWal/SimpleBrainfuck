@@ -34,6 +34,7 @@ namespace sbf {
 class BasicMacro : public Macro {
     public:
         BasicMacro();
+        virtual ~BasicMacro() {};
         BasicMacro(const std::vector<std::string>& argNames, const std::string& macro);
         virtual void compute(const std::vector<std::string>& arguments, std::string& output);
 

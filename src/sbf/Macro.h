@@ -32,6 +32,7 @@ namespace sbf {
 
 class Macro {
     public:
+        virtual ~Macro() {};
         virtual void compute(const std::vector<std::string>& arguments, std::string& output) = 0;
 };
 

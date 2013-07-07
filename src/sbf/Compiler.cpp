@@ -31,6 +31,12 @@ namespace sbf {
 Compiler::Compiler() {
 }
 
+Compiler::~Compiler() {
+    for(auto& it : _macros) {
+        delete it.second;
+    }
+}
+
 void Compiler::compileFromFile(const std::string& file, std::string& output) {
     std::string str;
     _readFile(file, str);
@@ -88,7 +94,17 @@ void Compiler::compileFromString(const std::string& str, std::string& output) {
                     std::string lastArg = args.back();
                     args.pop_back();
                     args.erase(args.begin());
-                    _macros[firstArg] = BasicMacro(args, lastArg);
+                    _macros[firstArg] = new BasicMacro(args, lastArg);
+                } else if(funcName == "cmacro") {
+                    std::string firstArg = args.front();
+                    std::string rest;
+                    for(unsigned int j = 1; j < args.size(); ++j) {
+                        rest += args[j];
+                        if(j != args.size()-1) {
+                            rest.push_back(';');
+                        }
+                    }
+                    _macros[firstArg] = new TccMacro(rest);
                 } else if(funcName == "variables") {
                     std::string worldName = args.front();
                     args.erase(args.begin());
@@ -99,7 +115,7 @@ void Compiler::compileFromString(const std::string& str, std::string& output) {
                     std::cerr << "Macro '" << funcName << "' not found" << std::endl;
                     return;
                 }
-                _macros[funcName].compute(args, macroResult);
+                _macros[funcName]->compute(args, macroResult);
             }
             std::string finalMacroResult;
             compileFromString(macroResult, finalMacroResult);
