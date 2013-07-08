@@ -6,11 +6,11 @@
 #include "bf/Parser.h"
 #include "bf/Resrap.h"
 #include "bf/Interpreter.h"
-
 #include "sbf/Compiler.h"
+#include "bf/Fitter.h"
 
 int main(int argc, char** argv) {
-    std::unordered_set<std::string> programs({"compile", "strip", "run"});
+    std::unordered_set<std::string> programs({"compile", "strip", "fit", "run"});
     std::vector<std::tuple<std::string, int, char**>> args({std::make_tuple("__prepending__", 0, &argv[1])});
     for(int i = 1; i < argc; ++i) {
         if(programs.find(argv[i]) != programs.end()) {
@@ -57,6 +57,21 @@ int main(int argc, char** argv) {
             r.esrap(cmds, str);
             for(bf::Command* cmd : cmds) {
                 delete cmd;
+            }
+        } else if(std::get<0>(arg) == "fit") {
+            bf::Fitter f;
+            std::string image;
+            std::string result;
+            if (FILE *fp = fopen(*std::get<2>(arg), "r")) {
+                char buf[1024];
+                while(size_t len = fread(buf, 1, sizeof(buf), fp)) {
+                    image.insert(image.end(), buf, buf + len);
+                }
+                fclose(fp);
+                f.fit(str, image, result);
+                str = result;
+            } else {
+                std::cerr << "Cannot open file '" << *std::get<2>(arg) << "'" << std::endl;
             }
         } else if(std::get<0>(arg) == "run") {
             bf::Parser parser;
