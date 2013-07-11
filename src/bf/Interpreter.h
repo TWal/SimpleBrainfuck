@@ -26,13 +26,15 @@
 #define BF_INTERPRETER_H
 
 #include <vector>
+#include <istream>
+#include <ostream>
 #include "Commands.h"
 
 namespace bf {
 
 class Interpreter {
     public:
-        Interpreter(int positiveMem = 30000, int negativeMem = 0);
+        Interpreter(std::istream* is, int positiveMem = 30000, int negativeMem = 0);
         ~Interpreter();
         void interpret(const std::vector<Command*>& commands);
         struct OptimizedCommand {
@@ -53,6 +55,7 @@ class Interpreter {
         };
 
     private:
+        std::istream* _is;
         char* _mem;
         char* _memToOrigin;
 };

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <unordered_set>
 #include <tuple>
@@ -111,10 +112,11 @@ void strip(int argc, char** argv, std::string& inout) {
     } opts = {"", ""};
     while(true) {
         static option longOptions[] = {
-            {"output", required_argument, 0, 'o'}
+            {"output", required_argument, 0, 'o'},
+            {"stats", no_argument, 0, 's'}
         };
         int optionIndex = 0;
-        int c = getopt_long(argc, argv, "o:", longOptions, &optionIndex);
+        int c = getopt_long(argc, argv, "o:s", longOptions, &optionIndex);
         if(c == -1) {
             break;
         }
@@ -128,6 +130,10 @@ void strip(int argc, char** argv, std::string& inout) {
         }
     }
 
+    size_t oldSize = inout.size();
+    if(has(opts.opts, 's')) {
+        std::cerr << "Before: " << inout.size() << std::endl;
+    }
     bf::Parser p;
     bf::Resrap r;
     std::vector<bf::Command*> cmds;
@@ -135,6 +141,9 @@ void strip(int argc, char** argv, std::string& inout) {
     r.esrap(cmds, inout);
     for(bf::Command* cmd : cmds) {
         delete cmd;
+    }
+    if(has(opts.opts, 's')) {
+        std::cerr << "After: " << inout.size() << " (" << ((float)inout.size()/oldSize)*100 << "%, -" << oldSize - inout.size() << "ops)" << std::endl;
     }
     if(has(opts.opts, 'o')) {
         writeOut(inout, opts.outputFile);
@@ -164,6 +173,7 @@ void fit(int argc, char** argv, std::string& inout) {
                 break;
             case 'i':
                 opts.imageFile = optarg;
+                break;
             default:
                 break;
         }
@@ -193,13 +203,54 @@ void fit(int argc, char** argv, std::string& inout) {
 }
 
 void run(int argc, char** argv, std::string& inout) {
-    bf::Parser parser;
-    bf::Interpreter interpreter;
+    struct {
+        std::string opts;
+        std::string inputDelimiter;
+        int positiveMem;
+        int negativeMem;
+    } opts = {"", "", 30000, 30000};
+    while(true) {
+        static option longOptions[] = {
+            {"delimiter", required_argument, 0, 'd'},
+            {"positive-memory", required_argument, 0, 'p'},
+            {"negative-memory", required_argument, 0, 'n'}
+        };
+        int optionIndex = 0;
+        int c = getopt_long(argc, argv, "d:p:n:", longOptions, &optionIndex);
+        if(c == -1) {
+            break;
+        }
+        opts.opts.push_back(c);
+        switch(c) {
+            case 'd':
+                opts.inputDelimiter = optarg;
+                break;
+            case 'p':
+                opts.positiveMem = atoi(optarg);
+                break;
+            case 'n':
+                opts.negativeMem = atoi(optarg);
+                break;
+            default:
+                break;
+        }
+    }
 
+    size_t delimPos = inout.find(opts.inputDelimiter);
+    bool hasDelimiter = has(opts.opts, 'd') && delimPos != std::string::npos;
+
+    bf::Parser parser;
+    std::istream* in = hasDelimiter ? new std::istringstream(inout.substr(delimPos + opts.inputDelimiter.size())) : &std::cin;
+    bf::Interpreter interpreter(in, opts.positiveMem, opts.negativeMem);
     std::vector<bf::Command*> cmds;
-    parser.parse(inout, cmds);
+
+    parser.parse(hasDelimiter ? inout.substr(0, delimPos) : inout, cmds);
     interpreter.interpret(cmds);
+
     inout = "";
+    if(hasDelimiter) {
+        delete in;
+    }
     for(bf::Command* cmd : cmds) {
         delete cmd;
     }

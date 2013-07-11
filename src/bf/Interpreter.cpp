@@ -29,7 +29,8 @@
 
 namespace bf {
 
-Interpreter::Interpreter(int positiveMem, int negativeMem) {
+Interpreter::Interpreter(std::istream* is, int positiveMem, int negativeMem) {
+    _is = is;
     _memToOrigin = new char[positiveMem + negativeMem];
     _mem = _memToOrigin + negativeMem;
     memset(_memToOrigin, 0, positiveMem + negativeMem);
@@ -99,7 +100,7 @@ void Interpreter::interpret(const std::vector<Command*>& commands) {
                 pointerPos += cmd.shift;
                 break;
            } case OptimizedCommand::INPUT: {
-                int c = getchar();
+                int c = _is->get();
                 _mem[pointerPos] = (c == EOF ? 0 : c);
                 pointerPos += cmd.shift;
                 break;
