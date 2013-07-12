@@ -113,10 +113,10 @@ void strip(int argc, char** argv, std::string& inout) {
     while(true) {
         static option longOptions[] = {
             {"output", required_argument, 0, 'o'},
-            {"stats", no_argument, 0, 's'}
+            {"verbose", no_argument, 0, 'v'}
         };
         int optionIndex = 0;
-        int c = getopt_long(argc, argv, "o:s", longOptions, &optionIndex);
+        int c = getopt_long(argc, argv, "o:v", longOptions, &optionIndex);
         if(c == -1) {
             break;
         }
@@ -131,8 +131,8 @@ void strip(int argc, char** argv, std::string& inout) {
     }
 
     size_t oldSize = inout.size();
-    if(has(opts.opts, 's')) {
-        std::cerr << "Before: " << inout.size() << std::endl;
+    if(has(opts.opts, 'v')) {
+        std::cerr << "[strip] Before: " << inout.size() << std::endl;
     }
     bf::Parser p;
     bf::Resrap r;
@@ -142,8 +142,8 @@ void strip(int argc, char** argv, std::string& inout) {
     for(bf::Command* cmd : cmds) {
         delete cmd;
     }
-    if(has(opts.opts, 's')) {
-        std::cerr << "After: " << inout.size() << " (" << ((float)inout.size()/oldSize)*100 << "%, -" << oldSize - inout.size() << "ops)" << std::endl;
+    if(has(opts.opts, 'v')) {
+        std::cerr << "[strip] After: " << inout.size() << " (" << ((float)inout.size()/oldSize)*100 << "%, -" << oldSize - inout.size() << " chars)" << std::endl;
     }
     if(has(opts.opts, 'o')) {
         writeOut(inout, opts.outputFile);
@@ -155,14 +155,17 @@ void fit(int argc, char** argv, std::string& inout) {
         std::string opts;
         std::string outputFile;
         std::string imageFile;
-    } opts = {"", "", ""};
+        std::string charsToReplace;
+    } opts = {"", "", "", "#"};
     while(true) {
         static option longOptions[] = {
             {"output", required_argument, 0, 'o'},
-            {"image", required_argument, 0, 'i'}
+            {"image", required_argument, 0, 'i'},
+            {"chars", required_argument, 0, 'c'},
+            {"verbose", no_argument, 0, 'v'}
         };
         int optionIndex = 0;
-        int c = getopt_long(argc, argv, "o:i:", longOptions, &optionIndex);
+        int c = getopt_long(argc, argv, "o:i:c:v", longOptions, &optionIndex);
         if(c == -1) {
             break;
         }
@@ -174,6 +177,8 @@ void fit(int argc, char** argv, std::string& inout) {
             case 'i':
                 opts.imageFile = optarg;
                 break;
+            case 'c':
+                opts.charsToReplace = optarg;
             default:
                 break;
         }
@@ -183,6 +188,12 @@ void fit(int argc, char** argv, std::string& inout) {
         std::cerr << "You must specify an image file" << std::endl;
         exit(-1);
     }
+
+    size_t oldSize = inout.size();
+    if(has(opts.opts, 'v')) {
+        std::cerr << "[fit] Before: " << inout.size() << std::endl;
+    }
+
     bf::Fitter f;
     std::string image;
     std::string result;
@@ -192,10 +203,14 @@ void fit(int argc, char** argv, std::string& inout) {
             image.insert(image.end(), buf, buf + len);
         }
         fclose(fp);
-        f.fit(inout, image, result);
+        f.fit(inout, image, result, opts.charsToReplace);
         inout = result;
     } else {
         std::cerr << "Cannot open file '" << opts.imageFile << "'" << std::endl;
+    }
+
+    if(has(opts.opts, 'v')) {
+        std::cerr << "[fit] After: " << inout.size() << " (" << ((float)inout.size()/oldSize)*100 << "%, " << (oldSize > inout.size() ? "-" : "+") << (oldSize - inout.size()) * (oldSize > inout.size() ? 1 : -1) << " chars)" << std::endl;
     }
     if(has(opts.opts, 'o')) {
         writeOut(inout, opts.outputFile);
@@ -213,10 +228,11 @@ void run(int argc, char** argv, std::string& inout) {
         static option longOptions[] = {
             {"delimiter", required_argument, 0, 'd'},
             {"positive-memory", required_argument, 0, 'p'},
-            {"negative-memory", required_argument, 0, 'n'}
+            {"negative-memory", required_argument, 0, 'n'},
+            {"verbose", required_argument, 0, 'v'}
         };
         int optionIndex = 0;
-        int c = getopt_long(argc, argv, "d:p:n:", longOptions, &optionIndex);
+        int c = getopt_long(argc, argv, "d:p:n:v", longOptions, &optionIndex);
         if(c == -1) {
             break;
         }
@@ -245,6 +261,10 @@ void run(int argc, char** argv, std::string& inout) {
     std::vector<bf::Command*> cmds;
 
     parser.parse(hasDelimiter ? inout.substr(0, delimPos) : inout, cmds);
+    if(has(opts.opts, 'v')) {
+        std::cerr << "[run] Before: " << (hasDelimiter ? delimPos : inout.size()) << " chars" << std::endl;
+        std::cerr << "[run] After: " << cmds.size() << " ops (" << (float)inout.size()/cmds.size() << " char/op)" << std::endl;
+    }
     interpreter.interpret(cmds);
 
     inout = "";

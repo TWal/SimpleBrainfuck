@@ -10,7 +10,7 @@ namespace bf {
 Fitter::Fitter() {
 }
 
-void Fitter::fit(const std::string& bfCode, const std::string& image, std::string& result) {
+int Fitter::fit(const std::string& bfCode, const std::string& image, std::string& result, const std::string& charsToReplace) {
     bf::Parser p;
     bf::Resrap r;
     std::vector<bf::Command*> cmds;
@@ -23,14 +23,14 @@ void Fitter::fit(const std::string& bfCode, const std::string& image, std::strin
     cmds.clear();
     size_t finalCodeSize = 0;
     for(char c : image) {
-        if(c == '#') {
+        if(charsToReplace.find_first_of(std::string(&c, 1)) != std::string::npos) {
             ++finalCodeSize;
         }
     }
 
     if(extendedCode.size() > finalCodeSize) {
         std::cerr << "The given code is too big" << std::endl;
-        return;
+        return finalCodeSize - extendedCode.size();
     }
     std::string chars0to2 = "++";
     std::string chars3to8 = "[-]>+>++";
@@ -96,12 +96,13 @@ void Fitter::fit(const std::string& bfCode, const std::string& image, std::strin
     result.clear();
     int i = 0;
     for(char c : image) {
-        if(c == '#') {
+        if(charsToReplace.find_first_of(std::string(&c, 1)) != std::string::npos) {
             result.push_back(extendedCode[i++]);
         } else {
             result.push_back(c);
         }
     }
+    return finalCodeSize - extendedCode.size();
 }
 
 } //namespace bf

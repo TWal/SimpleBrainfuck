@@ -8,7 +8,7 @@ namespace bf {
 class Fitter {
     public:
         Fitter();
-        void fit(const std::string& bfCode, const std::string& image, std::string& result);
+        int fit(const std::string& bfCode, const std::string& image, std::string& result, const std::string& charsToReplace = "#");
 
     private:
 };
