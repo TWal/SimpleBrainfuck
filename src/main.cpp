@@ -8,6 +8,7 @@
 #include "bf/Parser.h"
 #include "bf/Resrap.h"
 #include "bf/Interpreter.h"
+#include "bf/Debugger.h"
 #include "sbf/Compiler.h"
 #include "bf/Fitter.h"
 
@@ -229,10 +230,11 @@ void run(int argc, char** argv, std::string& inout) {
             {"delimiter", required_argument, 0, 'd'},
             {"positive-memory", required_argument, 0, 'p'},
             {"negative-memory", required_argument, 0, 'n'},
-            {"verbose", required_argument, 0, 'v'}
+            {"debug", no_argument, 0, 'g'},
+            {"verbose", no_argument, 0, 'v'}
         };
         int optionIndex = 0;
-        int c = getopt_long(argc, argv, "d:p:n:v", longOptions, &optionIndex);
+        int c = getopt_long(argc, argv, "d:p:n:gv", longOptions, &optionIndex);
         if(c == -1) {
             break;
         }
@@ -255,24 +257,29 @@ void run(int argc, char** argv, std::string& inout) {
     size_t delimPos = inout.find(opts.inputDelimiter);
     bool hasDelimiter = has(opts.opts, 'd') && delimPos != std::string::npos;
 
-    bf::Parser parser;
     std::istream* in = hasDelimiter ? new std::istringstream(inout.substr(delimPos + opts.inputDelimiter.size())) : &std::cin;
-    bf::Interpreter interpreter(in, opts.positiveMem, opts.negativeMem);
-    std::vector<bf::Command*> cmds;
 
-    parser.parse(hasDelimiter ? inout.substr(0, delimPos) : inout, cmds);
-    if(has(opts.opts, 'v')) {
-        std::cerr << "[run] Before: " << (hasDelimiter ? delimPos : inout.size()) << " chars" << std::endl;
-        std::cerr << "[run] After: " << cmds.size() << " ops (" << (float)inout.size()/cmds.size() << " char/op)" << std::endl;
+    if(has(opts.opts, 'g')) {
+        bf::Debugger debugger(in, opts.positiveMem, opts.negativeMem);
+        debugger.debug(hasDelimiter ? inout.substr(0, delimPos) : inout);
+    } else {
+        bf::Parser parser;
+        std::vector<bf::Command*> cmds;
+        bf::Interpreter interpreter(in, opts.positiveMem, opts.negativeMem);
+        parser.parse(hasDelimiter ? inout.substr(0, delimPos) : inout, cmds);
+        if(has(opts.opts, 'v')) {
+            std::cerr << "[run] Before: " << (hasDelimiter ? delimPos : inout.size()) << " chars" << std::endl;
+            std::cerr << "[run] After: " << cmds.size() << " ops (" << (float)inout.size()/cmds.size() << " char/op)" << std::endl;
+        }
+        interpreter.interpret(cmds);
+        for(bf::Command* cmd : cmds) {
+            delete cmd;
+        }
     }
-    interpreter.interpret(cmds);
 
     inout = "";
     if(hasDelimiter) {
         delete in;
-    }
-    for(bf::Command* cmd : cmds) {
-        delete cmd;
     }
 }
 
