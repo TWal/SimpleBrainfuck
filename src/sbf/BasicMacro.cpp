@@ -63,6 +63,10 @@ BasicMacro::BasicMacro(const std::vector<std::string>& argNames, const std::stri
 }
 
 void BasicMacro::compute(const std::vector<std::string>& arguments, std::string& output) {
+    if(_argNames.size() != arguments.size()) {
+        std::cerr << arguments.size() << " arguments given, " << _argNames.size() << " needed" << std::endl;
+        return;
+    }
     output.clear();
     for(const std::string& m : _macro) {
         bool isArgName = false;

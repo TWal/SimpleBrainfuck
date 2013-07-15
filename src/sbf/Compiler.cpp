@@ -48,10 +48,21 @@ void Compiler::compileFromString(const std::string& str, std::string& output) {
     for(unsigned int i = 0; i < str.size(); ++i) {
         if(str[i] == '#' || str[i] == '_') {
             char prependingChar = str[i];
-            if(str[i+1] == '_') {
+            if((str[i] == '#' && str[i+1] == '_') || (str[i] == '_' && str[i+1] == '#')) {
                 while(str[i] != '\n') {
                     ++i;
                 }
+                output.push_back('\n');
+                continue;
+            }
+            if(str[i] == '#' && str[i+1] == '#') {
+                output.push_back('#');
+                ++i;
+                continue;
+            }
+            if(str[i] == '_' && str[i+1] == '_') {
+                output.push_back('_');
+                ++i;
                 continue;
             }
 
@@ -90,11 +101,24 @@ void Compiler::compileFromString(const std::string& str, std::string& output) {
                         macroResult += fileContent;
                     }
                 } else if(funcName == "macro") {
+                    size_t delimiter = -1;
+                    for(size_t j = 0; j < args.size(); ++j) {
+                        if(args[j].empty()) {
+                            delimiter = j;
+                            break;
+                        }
+                    }
                     std::string firstArg = args.front();
-                    std::string lastArg = args.back();
-                    args.pop_back();
+                    std::string codeStr = "";
+                    for(size_t j = delimiter+1; j < args.size(); ++j) {
+                        codeStr += args[j];
+                        if(j != args.size()-1) {
+                            codeStr.push_back(';');
+                        }
+                    }
+                    args.erase(args.begin() + delimiter, args.end());
                     args.erase(args.begin());
-                    _macros[firstArg] = new BasicMacro(args, lastArg);
+                    _macros[firstArg] = new BasicMacro(args, codeStr);
                 } else if(funcName == "cmacro") {
                     std::string firstArg = args.front();
                     std::string rest;
