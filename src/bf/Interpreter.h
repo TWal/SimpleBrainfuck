@@ -27,7 +27,6 @@
 
 #include <vector>
 #include <istream>
-#include <ostream>
 #include "Commands.h"
 
 namespace bf {
