@@ -143,14 +143,14 @@ void Debugger::debug(const std::string& prog) {
                 progPos = 0;
                 _resetMemory();
             }
-        } else if(inputCmd == "d" || inputCmd == "dump" || inputCmd == "hexdump") {
+        } else if(inputCmd == "hd" || inputCmd == "dump" || inputCmd == "hexdump") {
             size_t colonPos = inputArgs.find_first_of(":");
             if(colonPos == std::string::npos) {
                 hexdump(0, atoi(inputArgs.data()));
             } else {
                 hexdump(atoi(inputArgs.substr(0, colonPos).data()), atoi(inputArgs.substr(colonPos+1).data()));
             }
-        } else if(inputCmd == "dummydump") {
+        } else if(inputCmd == "dd" || inputCmd == "dummydump") {
             size_t colonPos = inputArgs.find_first_of(":");
             if(colonPos == std::string::npos) {
                 dummydump(0, atoi(inputArgs.data()));
