@@ -12,3 +12,7 @@ add_executable(sbf ${sources_files})
 
 #TODO: better library handling
 target_link_libraries(sbf dl tcc)
+
+install(TARGETS sbf
+    DESTINATION /usr/local/bin/
+)
