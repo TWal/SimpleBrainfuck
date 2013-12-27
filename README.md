@@ -1,7 +1,7 @@
 SimpleBrainfuck
 ===============
 
-SimpleBrainfuck is a set of tools for brainfuck programmers.
+SimpleBrainfuck is a swiss-army knife for brainfuck programmers.
 
 How to use
 ----------
@@ -33,7 +33,7 @@ Arguments:
 
 ### Brainfuck fitter: `sbf fit`
 
-Fit brainfuck program into an ascii-art image
+Fit brainfuck program into an ascii-art image using the "chars" parameter specified below
 
 Arguments:
 
@@ -131,11 +131,16 @@ Sometimes, you want to repeat an expression. You can do it in SimpleBrainfuck, l
  * Use `#_` or `_#` to comment the rest of the line
  * Use `##` to insert a `#` (useful to use the debugger), and `__` to insert a `_`
 
+Example
+------
+You can find a brainfuck self-interpreter made with simplebraifuck right there: https://gist.github.com/TWal/6001872
+
+
 FAQ
 ---
 **The SimpleBrainfuck language is close to brainfuck, which is complicated. Why do you call it "simple"?**
 
-You are right it should be "Simple**r**Brainfuck". But "Simple" is a joke, because almost every software / protocol with "simple" in their name is complicated, like SBT (Simple Build Tool) or SNMP (Simple Network Management Protocol).
+You are right it should be "Simple*r*Brainfuck". But "Simple" is a joke, because almost every software / protocol with "simple" in their name is complicated, like SBT (Simple Build Tool) or SNMP (Simple Network Management Protocol).
 
 **I get segfaults in the SimpleBrainfuck compiler!**
 
