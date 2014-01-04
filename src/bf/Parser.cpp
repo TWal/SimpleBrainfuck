@@ -101,9 +101,12 @@ void Parser::_clean(std::vector<Command*>& commands) const {
 }
 
 void Parser::_clean_hashMap(std::unordered_map<int, int>& map) const {
-    for(auto& it : map) {
-        if(it.second == 0) {
-            map.erase(it.first);
+    auto it = map.begin();
+    while(it != map.end()) {
+        if(it->second == 0) {
+            it = map.erase(it);
+        } else {
+            ++it;
         }
     }
 }
