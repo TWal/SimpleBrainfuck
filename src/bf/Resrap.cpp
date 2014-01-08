@@ -41,30 +41,18 @@ void Resrap::esrap(const std::vector<Command*>& commands, std::string& code) con
             case Command::INPUT:
                 code.push_back(',');
                 break;
-            case Command::POINTER_LEFT:
-                code.push_back('<');
-                break;
-            case Command::POINTER_RIGHT:
-                code.push_back('>');
-                break;
-            case Command::MINUS:
-                code.push_back('-');
-                break;
-            case Command::PLUS:
-                code.push_back('+');
-                break;
             case Command::START_WHILE:
                 code.push_back('[');
                 break;
             case Command::END_WHILE:
                 code.push_back(']');
                 break;
-            case Command::COLLAPSED:
-                _mapToBf(((Collapsed*)(cmd))->adds, cmd->shift, code);
+            case Command::ADDS:
+                _mapToBf(((Adds*)(cmd))->adds, ((Adds*)cmd)->shift, code);
                 break;
             case Command::MULTIPLIES:
                 code.push_back('[');
-                _mapToBf(((Collapsed*)(cmd))->adds, 0, code);
+                _mapToBf(((Multiplies*)cmd)->muls, 0, code);
                 code.push_back('-');
                 code.push_back(']');
                 break;
@@ -75,9 +63,6 @@ void Resrap::esrap(const std::vector<Command*>& commands, std::string& code) con
                 break;
             default:
                 break;
-        }
-        if(cmd->type != Command::COLLAPSED) {
-            _addShifts(cmd->shift, code);
         }
     }
 }

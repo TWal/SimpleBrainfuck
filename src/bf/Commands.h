@@ -31,16 +31,11 @@ namespace bf {
 
 struct Command {
     enum COMMAND_TYPE {
-        NO_OPERATION,
         OUTPUT,
         INPUT,
-        POINTER_LEFT,
-        POINTER_RIGHT,
-        MINUS,
-        PLUS,
         START_WHILE,
         END_WHILE,
-        COLLAPSED,
+        ADDS,
         MULTIPLIES,
         WHILE_SHIFT
     };
@@ -49,12 +44,6 @@ struct Command {
     virtual ~Command();
 
     COMMAND_TYPE type;
-    int shift;
-};
-
-struct NoOperation : public Command {
-    NoOperation();
-    virtual ~NoOperation();
 };
 
 struct Output : public Command {
@@ -65,26 +54,6 @@ struct Output : public Command {
 struct Input : public Command {
     Input();
     virtual ~Input();
-};
-
-struct PointerLeft : public Command {
-    PointerLeft();
-    virtual ~PointerLeft();
-};
-
-struct PointerRight : public Command {
-    PointerRight();
-    virtual ~PointerRight();
-};
-
-struct Minus : public Command {
-    Minus();
-    virtual ~Minus();
-};
-
-struct Plus : public Command {
-    Plus();
-    virtual ~Plus();
 };
 
 struct EndWhile;
@@ -102,10 +71,11 @@ struct EndWhile : public Command {
     StartWhile* matching;
 };
 
-struct Collapsed : public Command {
-    Collapsed();
-    virtual ~Collapsed();
+struct Adds : public Command {
+    Adds();
+    virtual ~Adds();
     std::unordered_map<int, int> adds;
+    int shift;
 };
 
 struct Multiplies : public Command {

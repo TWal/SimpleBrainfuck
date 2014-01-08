@@ -47,38 +47,50 @@ void Interpreter::interpret(const std::vector<Command*>& commands) {
     for(Command* cmd : commands) {
         switch(cmd->type) {
             case Command::OUTPUT:
-                optiCommands.push_back({OptimizedCommand::OUTPUT, 0, (short)cmd->shift});
+                optiCommands.push_back({OptimizedCommand::OUTPUT, 0, 0});
                 break;
             case Command::INPUT:
-                optiCommands.push_back({OptimizedCommand::INPUT, 0, (short)cmd->shift});
+                optiCommands.push_back({OptimizedCommand::INPUT, 0, 0});
                 break;
             case Command::START_WHILE:
                 brackets.push(optiCommands.size());
-                optiCommands.push_back({OptimizedCommand::START_WHILE, (short)((StartWhile*)cmd)->matching->position, (short)cmd->shift});
+                optiCommands.push_back({OptimizedCommand::START_WHILE, (short)((StartWhile*)cmd)->matching->position, 0});
                 break;
             case Command::END_WHILE:
                 optiCommands[brackets.top()].data = optiCommands.size();
-                optiCommands.push_back({OptimizedCommand::END_WHILE, brackets.top(), (short)cmd->shift});
+                optiCommands.push_back({OptimizedCommand::END_WHILE, brackets.top(), 0});
                 brackets.pop();
                 break;
-            case Command::COLLAPSED : {
-                Collapsed* coll = (Collapsed*)cmd;
-                optiCommands.push_back({OptimizedCommand::ADDITIONS, (short)coll->adds.size(), (short)coll->shift});
-                for(auto& it : coll->adds) {
-                    optiCommands.push_back({OptimizedCommand::DATA, (short)it.second, (short)it.first});
+            case Command::ADDS : {
+                Adds* adds = (Adds*)cmd;
+                if(adds->adds.size() == 0) {
+                    auto it = optiCommands.rbegin();
+                    while(it != optiCommands.rend() && it->type == OptimizedCommand::DATA) {
+                        ++it;
+                    }
+                    if(it != optiCommands.rend()) {
+                        it->shift += adds->shift;
+                    } else {
+                        optiCommands.push_back({OptimizedCommand::ADDITIONS, 0, (short)adds->shift});
+                    }
+                } else {
+                    optiCommands.push_back({OptimizedCommand::ADDITIONS, (short)adds->adds.size(), (short)adds->shift});
+                    for(auto& it : adds->adds) {
+                        optiCommands.push_back({OptimizedCommand::DATA, (short)it.second, (short)it.first});
+                    }
                 }
                 break;
             }
             case Command::MULTIPLIES: {
                 Multiplies* muls = (Multiplies*)cmd;
-                optiCommands.push_back({OptimizedCommand::MULTIPLIES, (short)muls->muls.size(), (short)cmd->shift});
+                optiCommands.push_back({OptimizedCommand::MULTIPLIES, (short)muls->muls.size(), 0});
                 for(auto& it : muls->muls) {
                     optiCommands.push_back({OptimizedCommand::DATA, (short)it.second, (short)it.first});
                 }
                 break;
             }
             case Command::WHILE_SHIFT:
-                optiCommands.push_back({OptimizedCommand::WHILE_SHIFT, (short)((WhileShift*)cmd)->nb, (short)cmd->shift});
+                optiCommands.push_back({OptimizedCommand::WHILE_SHIFT, (short)((WhileShift*)cmd)->nb, 0});
                 break;
             default:
                 break;
