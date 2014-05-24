@@ -44,7 +44,9 @@ Arguments:
 
 ### Brainfuck interpreter: `sbf run`
 
-Optimized brainfuck interpreter (a bit faster than bff4, a bit slower than bffsree)
+Optimized brainfuck interpreter
+
+With JIT enabled, it is the fastest brainfuck interpreter in the world. Without JIT, it is a bit faster than bff4, and a bit slower than bffsree.
 
 Arguments:
 
@@ -52,6 +54,7 @@ Arguments:
  * `-p [number]` or `--positive-memory [number]`: specify the amount of positive memory
  * `-n [number]` or `--negative-memory [number]`: specify the amount of negative memory
  * `-g` or `--debug`: switch in debugger mode
+ * `-j` or `--jit`: enable jit
  * `-v` or `--verbose`: switch in verbose mode, display statistics about the optimization
 
 ### Brainfuck debugger: `sbf run -g`

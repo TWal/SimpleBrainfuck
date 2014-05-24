@@ -11,6 +11,7 @@
 #include "bf/Debugger.h"
 #include "sbf/Compiler.h"
 #include "bf/Fitter.h"
+#include "bf/Jit.h"
 
 void prepending(int argc, char** argv, std::string& inout);
 void compile(int argc, char** argv, std::string& inout);
@@ -231,10 +232,11 @@ void run(int argc, char** argv, std::string& inout) {
             {"positive-memory", required_argument, 0, 'p'},
             {"negative-memory", required_argument, 0, 'n'},
             {"debug", no_argument, 0, 'g'},
-            {"verbose", no_argument, 0, 'v'}
+            {"verbose", no_argument, 0, 'v'},
+            {"jit", no_argument, 0, 'j'}
         };
         int optionIndex = 0;
-        int c = getopt_long(argc, argv, "d:p:n:gv", longOptions, &optionIndex);
+        int c = getopt_long(argc, argv, "d:p:n:gvj", longOptions, &optionIndex);
         if(c == -1) {
             break;
         }
@@ -265,13 +267,19 @@ void run(int argc, char** argv, std::string& inout) {
     } else {
         bf::Parser parser;
         std::vector<bf::Command*> cmds;
-        bf::Interpreter interpreter(in, opts.positiveMem, opts.negativeMem);
         parser.parse(hasDelimiter ? inout.substr(0, delimPos) : inout, cmds);
         if(has(opts.opts, 'v')) {
             std::cerr << "[run] Before: " << (hasDelimiter ? delimPos : inout.size()) << " chars" << std::endl;
             std::cerr << "[run] After: " << cmds.size() << " ops (" << (float)inout.size()/cmds.size() << " char/op)" << std::endl;
         }
-        interpreter.interpret(cmds);
+        if(has(opts.opts, 'j')) {
+            bf::Jit jit(in, opts.positiveMem, opts.negativeMem);
+            jit.compile(cmds);
+            jit.run();
+        } else {
+            bf::Interpreter interpreter(in, opts.positiveMem, opts.negativeMem);
+            interpreter.interpret(cmds);
+        }
         for(bf::Command* cmd : cmds) {
             delete cmd;
         }
