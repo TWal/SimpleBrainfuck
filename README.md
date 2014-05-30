@@ -46,7 +46,7 @@ Arguments:
 
 Optimized brainfuck interpreter
 
-With JIT enabled, it is the fastest brainfuck interpreter in the world. Without JIT, it is a bit faster than bff4, and a bit slower than bffsree.
+With JIT enabled, it is one of the fastest brainfuck interpreter in the world. Without JIT, it is a bit faster than bff4, and a bit slower than bffsree.
 
 Arguments:
 
