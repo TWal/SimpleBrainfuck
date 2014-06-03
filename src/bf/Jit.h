@@ -34,7 +34,7 @@ namespace bf {
 
 class Jit {
     public:
-        Jit(std::istream* is, int positiveMem = 30000, int negativeMem = 0);
+        Jit(std::istream* is, int cellSize = 1, int positiveMem = 30000, int negativeMem = 0);
         ~Jit();
         void compile(const std::vector<Command*>& commands);
         void run();
@@ -44,6 +44,7 @@ class Jit {
         char* _memToOrigin;
         jit_context_t _context;
         jit_function_t _func;
+        int _cellSize;
 };
 
 }

@@ -225,18 +225,20 @@ void run(int argc, char** argv, std::string& inout) {
         std::string inputDelimiter;
         int positiveMem;
         int negativeMem;
-    } opts = {"", "", 30000, 30000};
+        int cellSize;
+    } opts = {"", "", 30000, 30000, 1};
     while(true) {
         static option longOptions[] = {
             {"delimiter", required_argument, 0, 'd'},
             {"positive-memory", required_argument, 0, 'p'},
             {"negative-memory", required_argument, 0, 'n'},
+            {"cell-size", required_argument, 0, 'c'},
             {"debug", no_argument, 0, 'g'},
             {"verbose", no_argument, 0, 'v'},
             {"jit", no_argument, 0, 'j'}
         };
         int optionIndex = 0;
-        int c = getopt_long(argc, argv, "d:p:n:gvj", longOptions, &optionIndex);
+        int c = getopt_long(argc, argv, "d:p:n:c:gvj", longOptions, &optionIndex);
         if(c == -1) {
             break;
         }
@@ -250,6 +252,9 @@ void run(int argc, char** argv, std::string& inout) {
                 break;
             case 'n':
                 opts.negativeMem = atoi(optarg);
+                break;
+            case 'c':
+                opts.cellSize = atoi(optarg);
                 break;
             default:
                 break;
@@ -273,7 +278,7 @@ void run(int argc, char** argv, std::string& inout) {
             std::cerr << "[run] After: " << cmds.size() << " ops (" << (float)inout.size()/cmds.size() << " char/op)" << std::endl;
         }
         if(has(opts.opts, 'j')) {
-            bf::Jit jit(in, opts.positiveMem, opts.negativeMem);
+            bf::Jit jit(in, opts.cellSize, opts.positiveMem, opts.negativeMem);
             jit.compile(cmds);
             jit.run();
         } else {

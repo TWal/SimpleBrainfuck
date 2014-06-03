@@ -35,11 +35,12 @@ static char getCharFromIstream(std::istream* s) {
 
 namespace bf {
 
-Jit::Jit(std::istream* is, int positiveMem, int negativeMem) {
+Jit::Jit(std::istream* is, int cellSize, int positiveMem, int negativeMem) {
     _is = is;
-    _memToOrigin = new char[positiveMem + negativeMem];
+    _cellSize = cellSize;
+    _memToOrigin = new char[(positiveMem + negativeMem) * cellSize];
     _mem = _memToOrigin + negativeMem;
-    memset(_memToOrigin, 0, positiveMem + negativeMem);
+    memset(_memToOrigin, 0, (positiveMem + negativeMem) * cellSize);
     _context = jit_context_create();
 }
 
@@ -49,9 +50,22 @@ Jit::~Jit() {
 }
 
 void Jit::compile(const std::vector<Command*>& commands) {
+    jit_type_t cellType;
+    switch(_cellSize) {
+        case 4:
+            cellType = jit_type_uint;
+            break;
+        case 2:
+            cellType = jit_type_ushort;
+            break;
+        default:
+            cellType = jit_type_ubyte;
+            _cellSize = 1;
+            break;
+    }
     jit_context_build_start(_context);
-    jit_type_t jit_type_ubyte_ptr = jit_type_create_pointer(jit_type_ubyte, 1);
-    jit_type_t params[2] = {jit_type_ubyte_ptr, jit_type_void_ptr};
+    jit_type_t cellPtr = jit_type_create_pointer(cellType, 1);
+    jit_type_t params[2] = {cellPtr, jit_type_void_ptr};
     jit_type_t signature = jit_type_create_signature(jit_abi_cdecl, jit_type_void, params, 2, 1);
     _func = jit_function_create(_context, signature);
 
@@ -73,7 +87,7 @@ void Jit::compile(const std::vector<Command*>& commands) {
     for(Command* cmd : commands) {
         switch(cmd->type) {
             case Command::OUTPUT: {
-                tmp = jit_insn_load_relative(_func, ptr, 0, jit_type_ubyte);
+                tmp = jit_insn_load_relative(_func, ptr, 0, cellType);
                 jit_insn_call_native(_func, NULL, (void*)putchar, putcharSig, &tmp, 1, JIT_CALL_NOTHROW);
             }
                 break;
@@ -87,13 +101,13 @@ void Jit::compile(const std::vector<Command*>& commands) {
                 labels.push_back(jit_label_undefined);
                 jit_label_t* labelEnd = &labels.back();
                 loopStack.push(std::make_pair(labelStart, labelEnd));
-                tmp = jit_insn_load_relative(_func, ptr, 0, jit_type_ubyte);
+                tmp = jit_insn_load_relative(_func, ptr, 0, cellType);
                 jit_insn_branch_if_not(_func, tmp, labelEnd);
                 jit_insn_label(_func, labelStart);
                 break;
             }
             case Command::END_WHILE: {
-                tmp = jit_insn_load_relative(_func, ptr, 0, jit_type_ubyte);
+                tmp = jit_insn_load_relative(_func, ptr, 0, cellType);
                 jit_insn_branch_if(_func, tmp, loopStack.top().first);
                 jit_insn_label(_func, loopStack.top().second);
                 loopStack.pop();
@@ -102,28 +116,28 @@ void Jit::compile(const std::vector<Command*>& commands) {
             case Command::ADDS : {
                 Adds* adds = (Adds*)cmd;
                 for(const auto& it : adds->adds) {
-                    tmp = jit_insn_load_relative(_func, ptr, it.first, jit_type_ubyte);
-                    cst = jit_value_create_nint_constant(_func, jit_type_ubyte, it.second);
+                    tmp = jit_insn_load_relative(_func, ptr, it.first * _cellSize, cellType);
+                    cst = jit_value_create_nint_constant(_func, cellType, it.second);
                     tmp = jit_insn_add(_func, tmp, cst);
-                    tmp = jit_insn_convert(_func, tmp, jit_type_ubyte, 0);
-                    jit_insn_store_relative(_func, ptr, it.first, tmp);
+                    tmp = jit_insn_convert(_func, tmp, cellType, 0);
+                    jit_insn_store_relative(_func, ptr, it.first * _cellSize, tmp);
                 }
-                tmp = jit_insn_add_relative(_func, ptr, adds->shift);
+                tmp = jit_insn_add_relative(_func, ptr, adds->shift * _cellSize);
                 jit_insn_store(_func, ptr, tmp);
                 break;
             }
             case Command::MULTIPLIES: {
                 Multiplies* muls = (Multiplies*)cmd;
-                tmp2 = jit_insn_load_relative(_func, ptr, 0, jit_type_ubyte);
+                tmp2 = jit_insn_load_relative(_func, ptr, 0, cellType);
                 for(const auto& it : muls->muls) {
-                    cst = jit_value_create_nint_constant(_func, jit_type_ubyte, it.second);
+                    cst = jit_value_create_nint_constant(_func, cellType, it.second);
                     tmp = jit_insn_mul(_func, tmp2, cst);
-                    tmp3 = jit_insn_load_relative(_func, ptr, it.first, jit_type_ubyte);
+                    tmp3 = jit_insn_load_relative(_func, ptr, it.first * _cellSize, cellType);
                     tmp3 = jit_insn_add(_func, tmp3, tmp);
-                    tmp3 = jit_insn_convert(_func, tmp3, jit_type_ubyte, 0);
-                    jit_insn_store_relative(_func, ptr, it.first, tmp3);
+                    tmp3 = jit_insn_convert(_func, tmp3, cellType, 0);
+                    jit_insn_store_relative(_func, ptr, it.first * _cellSize, tmp3);
                 }
-                cst = jit_value_create_nint_constant(_func, jit_type_ubyte, 0);
+                cst = jit_value_create_nint_constant(_func, cellType, 0);
                 jit_insn_store_relative(_func, ptr, 0, cst);
                 break;
             }
@@ -132,12 +146,12 @@ void Jit::compile(const std::vector<Command*>& commands) {
                 jit_label_t* labelStart = &labels.back();
                 labels.push_back(jit_label_undefined);
                 jit_label_t* labelEnd = &labels.back();
-                tmp = jit_insn_load_relative(_func, ptr, 0, jit_type_ubyte);
+                tmp = jit_insn_load_relative(_func, ptr, 0, cellType);
                 jit_insn_branch_if_not(_func, tmp, labelEnd);
                 jit_insn_label(_func, labelStart);
-                tmp = jit_insn_add_relative(_func, ptr, ((WhileShift*)cmd)->nb);
+                tmp = jit_insn_add_relative(_func, ptr, ((WhileShift*)cmd)->nb * _cellSize);
                 jit_insn_store(_func, ptr, tmp);
-                tmp = jit_insn_load_relative(_func, ptr, 0, jit_type_ubyte);
+                tmp = jit_insn_load_relative(_func, ptr, 0, cellType);
                 jit_insn_branch_if(_func, tmp, labelStart);
                 jit_insn_label(_func, labelEnd);
                 break;

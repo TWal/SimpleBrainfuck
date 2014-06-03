@@ -53,6 +53,7 @@ Arguments:
  * `-d [delimiter]` or `--delimiter [delimiter]`: specify an input delimiter, as for bff4 or self-interpreters. Default: none
  * `-p [number]` or `--positive-memory [number]`: specify the amount of positive memory
  * `-n [number]` or `--negative-memory [number]`: specify the amount of negative memory
+ * `-c [number]` or `--cell-size [number]`: specify the number of byte in a cell (1, 2 or 4) (only works in jit)
  * `-g` or `--debug`: switch in debugger mode
  * `-j` or `--jit`: enable jit
  * `-v` or `--verbose`: switch in verbose mode, display statistics about the optimization
